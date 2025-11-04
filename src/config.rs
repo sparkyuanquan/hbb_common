@@ -247,13 +247,19 @@ pub struct PeerConfig {
         skip_serializing_if = "String::is_empty"
     )]
     pub view_style: String,
-    // Image scroll style, scrollbar or scroll auto
+    // Image scroll style, scrolledge, scrollbar or scroll auto
     #[serde(
         default = "PeerConfig::default_scroll_style",
         deserialize_with = "PeerConfig::deserialize_scroll_style",
         skip_serializing_if = "String::is_empty"
     )]
     pub scroll_style: String,
+    #[serde(
+        default = "PeerConfig::empty_option_i32",
+        deserialize_with = "deserialize_option_i32",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub edge_scroll_edge_thickness: Option<i32>,
     #[serde(
         default = "PeerConfig::default_image_quality",
         deserialize_with = "PeerConfig::deserialize_image_quality",
@@ -362,6 +368,7 @@ impl Default for PeerConfig {
             size_pf: Default::default(),
             view_style: Self::default_view_style(),
             scroll_style: Self::default_scroll_style(),
+            edge_scroll_edge_thickness: None,
             image_quality: Self::default_image_quality(),
             custom_image_quality: Self::default_custom_image_quality(),
             show_remote_cursor: Default::default(),
@@ -1530,6 +1537,10 @@ impl PeerConfig {
         Self::path(id).exists()
     }
 
+    pub fn empty_option_i32() -> Option<i32> {
+        None
+    }
+
     serde_field_string!(
         default_view_style,
         deserialize_view_style,
@@ -1540,6 +1551,7 @@ impl PeerConfig {
         deserialize_scroll_style,
         UserDefaultConfig::read(keys::OPTION_SCROLL_STYLE)
     );
+
     serde_field_string!(
         default_image_quality,
         deserialize_image_quality,
@@ -2313,6 +2325,12 @@ deserialize_default!(deserialize_size, Size);
 deserialize_default!(deserialize_hashmap_string_string, HashMap<String, String>);
 deserialize_default!(deserialize_hashmap_string_bool,  HashMap<String, bool>);
 deserialize_default!(deserialize_hashmap_resolutions, HashMap<String, Resolution>);
+
+fn deserialize_option_i32<'de, D>(deserializer: D) -> Result<Option<i32>, D::Error>
+    where D: de::Deserializer<'de>,
+{
+    Ok(deserialize_i32(deserializer).ok())
+}
 
 #[inline]
 fn get_or(
