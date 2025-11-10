@@ -47,20 +47,15 @@ extern "C" fn breakdown_signal_handler(sig: i32) {
         info = "Perhaps hwcodec causing the crash, disable it first".to_string();
         log::info!("{}", info);
     }
-    log::error!(
-        "Got signal {} and exit. stack:\n{}",
+    let err = &format!(
+        "Got signal {} and exit.{}\nstack:\n{}",
         sig,
-        stack.join("\n").to_string()
+        info,
+        stack.join("\n")
     );
-    if !info.is_empty() {
-        #[cfg(target_os = "linux")]
-        linux::system_message(
-            "RustDesk",
-            &format!("Got signal {} and exit.{}", sig, info),
-            true,
-        )
-        .ok();
-    }
+    log::error!("{}", &err);
+    #[cfg(target_os = "linux")]
+    linux::system_message("RustDesk", &err, true).ok();
     unsafe {
         #[allow(static_mut_refs)]
         if let Some(callback) = &GLOBAL_CALLBACK {
