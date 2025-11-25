@@ -1,5 +1,5 @@
 use crate::ResultType;
-use std::{collections::HashMap, process::Command};
+use std::{collections::HashMap, io::BufRead, process::Command};
 
 use sctk::{
     output::OutputData,
@@ -54,17 +54,24 @@ pub struct Distro {
 
 impl Distro {
     fn new() -> Self {
-        let name = run_cmds("awk -F'=' '/^NAME=/ {print $2}' /etc/os-release")
-            .unwrap_or_default()
-            .trim()
-            .trim_matches('"')
-            .to_string();
-        let version_id = run_cmds("awk -F'=' '/^VERSION_ID=/ {print $2}' /etc/os-release")
-            .unwrap_or_default()
-            .trim()
-            .trim_matches('"')
-            .to_string();
-        Self { name, version_id }
+        let mut name = None;
+        let mut version_id = None;
+        if let Ok(os_release) = std::fs::File::open("/etc/os-release") {
+            let os_release = std::io::BufReader::new(os_release);
+            for line in os_release.lines() {
+                if let Some((key, value)) = line.unwrap_or_default().split_once('=') {
+                    if key == "NAME" {
+                        name = Some(value.trim_matches('"').to_owned());
+                    } else if key == "VERSION_ID" {
+                        version_id = Some(value.trim_matches('"').to_owned());
+                    }
+                }
+            }
+        }
+        Self {
+            name: name.unwrap_or_default(),
+            version_id: version_id.unwrap_or_default(),
+        }
     }
 }
 
@@ -278,14 +285,6 @@ pub fn is_session_locked(sid: &str) -> bool {
     } else {
         false
     }
-}
-
-// **Note** that the return value here, the last character is '\n'.
-pub fn run_cmds(cmds: &str) -> ResultType<String> {
-    let output = std::process::Command::new(CMD_SH.as_str())
-        .args(vec!["-c", cmds])
-        .output()?;
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
 fn run_loginctl(args: Option<Vec<&str>>) -> std::io::Result<std::process::Output> {
