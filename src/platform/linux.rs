@@ -281,24 +281,11 @@ pub fn is_session_locked(sid: &str) -> bool {
 }
 
 // **Note** that the return value here, the last character is '\n'.
-// Use `run_cmds_trim_newline()` if you want to remove '\n' at the end.
 pub fn run_cmds(cmds: &str) -> ResultType<String> {
     let output = std::process::Command::new(CMD_SH.as_str())
         .args(vec!["-c", cmds])
         .output()?;
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
-}
-
-pub fn run_cmds_trim_newline(cmds: &str) -> ResultType<String> {
-    let output = std::process::Command::new(CMD_SH.as_str())
-        .args(vec!["-c", cmds])
-        .output()?;
-    let out = String::from_utf8_lossy(&output.stdout);
-    Ok(if out.ends_with('\n') {
-        out[..out.len() - 1].to_string()
-    } else {
-        out.to_string()
-    })
 }
 
 fn run_loginctl(args: Option<Vec<&str>>) -> std::io::Result<std::process::Output> {
@@ -440,19 +427,4 @@ pub fn get_wayland_displays() -> ResultType<Vec<WaylandDisplayInfo>> {
     }
 
     Ok(display_infos)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_run_cmds_trim_newline() {
-        assert_eq!(run_cmds_trim_newline("echo -n 123").unwrap(), "123");
-        assert_eq!(run_cmds_trim_newline("echo 123").unwrap(), "123");
-        assert_eq!(
-            run_cmds_trim_newline("whoami").unwrap() + "\n",
-            run_cmds("whoami").unwrap()
-        );
-    }
 }
