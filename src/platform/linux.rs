@@ -37,8 +37,6 @@ lazy_static::lazy_static! {
 // ...
 lazy_static::lazy_static! {
     pub static ref CMD_LOGINCTL: String = find_cmd_path("loginctl");
-    pub static ref CMD_PS: String = find_cmd_path("ps");
-    pub static ref CMD_SH: String = find_cmd_path("sh");
 }
 
 pub const DISPLAY_SERVER_WAYLAND: &str = "wayland";
@@ -106,9 +104,9 @@ pub fn is_kde() -> bool {
 // Don't use `hbb_common::platform::linux::is_kde()` here.
 // It's not correct in the server process.
 pub fn is_kde_session() -> bool {
-    std::process::Command::new(CMD_SH.as_str())
-        .arg("-c")
-        .arg("pgrep -f kded[0-9]+")
+    Command::new("pgrep")
+        .arg("-f")
+        .arg("kded[0-9]+")
         .stdout(std::process::Stdio::piped())
         .output()
         .map(|o| !o.stdout.is_empty())
