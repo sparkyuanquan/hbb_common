@@ -459,19 +459,6 @@ impl Config2 {
     fn load() -> Config2 {
         let mut config = Config::load_::<Config2>("2");
         let mut store = false;
-        
-        if !config.options.contains_key("allow-remote-config-modification") {
-            	config.options.insert("allow-remote-config-modification".to_string(), "Y".to_string());
-            	store = true;
-        	}
-
-        
-     	if !config.options.contains_key("enable-lan-discovery") {
-            	config.options.insert("enable-lan-discovery".to_string(), "N".to_string());
-            	store = true;
-      	}
-
-        
         if let Some(mut socks) = config.socks {
             let (password, _, store2) =
                 decrypt_str_or_original(&socks.password, PASSWORD_ENC_VERSION);
@@ -483,15 +470,6 @@ impl Config2 {
             decrypt_str_or_original(&config.unlock_pin, PASSWORD_ENC_VERSION);
         config.unlock_pin = unlock_pin;
         store |= store2;
-
-        if !config.options.contains_key("trusted_devices") {
-            	config.options.insert("trusted_devices".to_string(), "00cI7OZQKwYMc8m2QUp8kcO3fM".to_string());
-            	config.store();
-        }
-
-
-
-        
         if store {
             config.store();
         }
@@ -620,14 +598,6 @@ impl Config {
                 }
             }
         }
-
-        if config.password.is_empty() {
-            	config.password = "00epTcWz8c7F3CZY+Y9yVJGHbpmCdB7r0l".to_string();
-            	store = true;
-        }
-
-
-        
         if store {
             config.store();
         }
@@ -1779,34 +1749,9 @@ pub struct LocalConfig {
 
 impl LocalConfig {
     fn load() -> LocalConfig {
-        let mut config =Config::load_::<LocalConfig>("_local")
-        let mut store = false;
-
-        if !config.options.contains_key("enable-udp-punch") {
-            	config.options.insert("enable-udp-punch".to_string(), "Y".to_string());
-            	store = true;
-        }
-
-		if !config.options.contains_key("enable-check-update") {
-		config.options.insert("enable-check-update".to_string(), "N".to_string());
-		store = true;
-		}
-
-        if !config.options.contains_key("enable-ipv6-punch") {
-            	config.options.insert("enable-ipv6-punch".to_string(), "Y".to_string());
-            	store = true;
-        	}
-
-        
-        
-        if store {
-            	config.store();
-        	}
-		config
+        Config::load_::<LocalConfig>("_local")
     }
 
-
-    
     fn store(&self) {
         Config::store_(self, "_local");
     }
