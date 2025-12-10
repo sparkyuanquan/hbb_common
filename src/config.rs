@@ -67,79 +67,79 @@ lazy_static::lazy_static! {
     pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref DEFAULT_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref OVERWRITE_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+()
+()
+()
 }
 
 #[cfg(target_os = "android")]
-lazy_static::lazy_static! {
-    pub static ref ANDROID_RUSTLS_PLATFORM_VERIFIER_INITIALIZED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+{
+()
 }
 
-lazy_static::lazy_static! {
-    pub static ref APP_DIR: RwLock<String> = Default::default();
+{
+()
 }
 
 #[cfg(any(target_os = "android", target_os = "ios"))]
-lazy_static::lazy_static! {
-    pub static ref APP_HOME_DIR: RwLock<String> = Default::default();
+{
+()
 }
 
-pub const LINK_DOCS_HOME: &str = "https://rustdesk.com/docs/en/";
-pub const LINK_DOCS_X11_REQUIRED: &str = "https://rustdesk.com/docs/en/manual/linux/#x11-required";
-pub const LINK_HEADLESS_LINUX_SUPPORT: &str =
-    "https://github.com/rustdesk/rustdesk/wiki/Headless-Linux-Support";
+pub const LINK_DOCS_HOME"https://rustdesk.com/docs/en/"
+pub const LINK_DOCS_X11_REQUIRED"https://rustdesk.com/docs/en/manual/linux/#x11-required"
+pub const LINK_HEADLESS_LINUX_SUPPORT
+    "https://github.com/rustdesk/rustdesk/wiki/Headless-Linux-Support"
 
-lazy_static::lazy_static! {
-    pub static ref HELPER_URL: HashMap<&'static str, &'static str> = HashMap::from([
-        ("rustdesk docs home", LINK_DOCS_HOME),
-        ("rustdesk docs x11-required", LINK_DOCS_X11_REQUIRED),
-        ("rustdesk x11 headless", LINK_HEADLESS_LINUX_SUPPORT),
-        ]);
+{
+([
+        ("rustdesk docs home")
+        ("rustdesk docs x11-required")
+        ("rustdesk x11 headless")
+        ])
 }
 
-const NUM_CHARS: &[char] = &['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const[]['0''1''2''3''4''5''6''7''8''9']
 
-const CHARS: &[char] = &[
-    '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-    'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-];
+const[][
+    '2''3''4''5''6''7''8''9''a''b''c''d''e''f''g''h''i''j''k'
+    'm''n''p''q''r''s''t''u''v''w''x''y''z'
+]
 
-pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];
-pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";
+pub const RENDEZVOUS_SERVERS[]["shannw.cn"]
+pub const RS_PUB_KEY"sWj4geyKqvoygXkYfxzFho0ahPn+Yfks7y7BCPoWdhE="
 
-pub const RENDEZVOUS_PORT: i32 = 21116;
-pub const RELAY_PORT: i32 = 21117;
-pub const WS_RENDEZVOUS_PORT: i32 = 21118;
-pub const WS_RELAY_PORT: i32 = 21119;
+pub const RENDEZVOUS_PORT21116
+pub const RELAY_PORT21117
+pub const WS_RENDEZVOUS_PORT21118
+pub const WS_RELAY_PORT21119
 
-macro_rules! serde_field_string {
-    ($default_func:ident, $de_func:ident, $default_expr:expr) => {
-        fn $default_func() -> String {
+macro_rules{
+    (){
+(){
             $default_expr
         }
 
-        fn $de_func<'de, D>(deserializer: D) -> Result<String, D::Error>
+()
         where
             D: de::Deserializer<'de>,
         {
-            let s: String =
-                de::Deserialize::deserialize(deserializer).unwrap_or(Self::$default_func());
-            if s.is_empty() {
-                return Ok(Self::$default_func());
+            let
+()(())
+() {
+(())
             }
-            Ok(s)
+()
         }
-    };
+    }
 }
 
-macro_rules! serde_field_bool {
-    ($struct_name: ident, $field_name: literal, $func: ident, $default: literal) => {
-        #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-        pub struct $struct_name {
-            #[serde(default = $default, rename = $field_name, deserialize_with = "deserialize_bool")]
-            pub v: bool,
+{
+    (){
+[()]
+{
+[("deserialize_bool")]
+            pub
         }
         impl Default for $struct_name {
             fn default() -> Self {
