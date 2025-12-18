@@ -440,14 +440,8 @@ fn patch(path: PathBuf) -> PathBuf {
         #[cfg(target_os = "linux")]
         {
             if _tmp == "/root" {
-                if let Ok(user) = crate::platform::linux::run_cmds_trim_newline("whoami") {
-                    if user != "root" {
-                        let cmd = format!("getent passwd '{}' | awk -F':' '{{print $6}}'", user);
-                        if let Ok(output) = crate::platform::linux::run_cmds_trim_newline(&cmd) {
-                            return output.into();
-                        }
-                        return format!("/home/{user}").into();
-                    }
+                if let Some(home_dir) = std::env::home_dir() {
+                    return home_dir;
                 }
             }
         }

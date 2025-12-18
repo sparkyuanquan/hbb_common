@@ -1,5 +1,5 @@
 use crate::ResultType;
-use std::{collections::HashMap, process::Command};
+use std::{collections::HashMap, io::BufRead, process::Command};
 
 use sctk::{
     output::OutputData,
@@ -37,8 +37,6 @@ lazy_static::lazy_static! {
 // ...
 lazy_static::lazy_static! {
     pub static ref CMD_LOGINCTL: String = find_cmd_path("loginctl");
-    pub static ref CMD_PS: String = find_cmd_path("ps");
-    pub static ref CMD_SH: String = find_cmd_path("sh");
 }
 
 pub const DISPLAY_SERVER_WAYLAND: &str = "wayland";
@@ -54,17 +52,24 @@ pub struct Distro {
 
 impl Distro {
     fn new() -> Self {
-        let name = run_cmds("awk -F'=' '/^NAME=/ {print $2}' /etc/os-release")
-            .unwrap_or_default()
-            .trim()
-            .trim_matches('"')
-            .to_string();
-        let version_id = run_cmds("awk -F'=' '/^VERSION_ID=/ {print $2}' /etc/os-release")
-            .unwrap_or_default()
-            .trim()
-            .trim_matches('"')
-            .to_string();
-        Self { name, version_id }
+        let mut name = None;
+        let mut version_id = None;
+        if let Ok(os_release) = std::fs::File::open("/etc/os-release") {
+            let os_release = std::io::BufReader::new(os_release);
+            for line in os_release.lines() {
+                if let Some((key, value)) = line.unwrap_or_default().split_once('=') {
+                    if key == "NAME" {
+                        name = Some(value.trim_matches('"').to_owned());
+                    } else if key == "VERSION_ID" {
+                        version_id = Some(value.trim_matches('"').to_owned());
+                    }
+                }
+            }
+        }
+        Self {
+            name: name.unwrap_or_default(),
+            version_id: version_id.unwrap_or_default(),
+        }
     }
 }
 
@@ -99,9 +104,9 @@ pub fn is_kde() -> bool {
 // Don't use `hbb_common::platform::linux::is_kde()` here.
 // It's not correct in the server process.
 pub fn is_kde_session() -> bool {
-    std::process::Command::new(CMD_SH.as_str())
-        .arg("-c")
-        .arg("pgrep -f kded[0-9]+")
+    Command::new("pgrep")
+        .arg("-f")
+        .arg("kded[0-9]+")
         .stdout(std::process::Stdio::piped())
         .output()
         .map(|o| !o.stdout.is_empty())
@@ -146,7 +151,7 @@ pub fn get_display_server() -> String {
             session = sid;
         }
         if session.is_empty() {
-            session = run_cmds("cat /proc/self/sessionid").unwrap_or_default();
+            session = std::fs::read_to_string("/proc/self/sessionid").unwrap_or_default();
             if session == INVALID_SESSION {
                 session = "".to_owned();
             }
@@ -278,27 +283,6 @@ pub fn is_session_locked(sid: &str) -> bool {
     } else {
         false
     }
-}
-
-// **Note** that the return value here, the last character is '\n'.
-// Use `run_cmds_trim_newline()` if you want to remove '\n' at the end.
-pub fn run_cmds(cmds: &str) -> ResultType<String> {
-    let output = std::process::Command::new(CMD_SH.as_str())
-        .args(vec!["-c", cmds])
-        .output()?;
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
-}
-
-pub fn run_cmds_trim_newline(cmds: &str) -> ResultType<String> {
-    let output = std::process::Command::new(CMD_SH.as_str())
-        .args(vec!["-c", cmds])
-        .output()?;
-    let out = String::from_utf8_lossy(&output.stdout);
-    Ok(if out.ends_with('\n') {
-        out[..out.len() - 1].to_string()
-    } else {
-        out.to_string()
-    })
 }
 
 fn run_loginctl(args: Option<Vec<&str>>) -> std::io::Result<std::process::Output> {
@@ -440,19 +424,4 @@ pub fn get_wayland_displays() -> ResultType<Vec<WaylandDisplayInfo>> {
     }
 
     Ok(display_infos)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_run_cmds_trim_newline() {
-        assert_eq!(run_cmds_trim_newline("echo -n 123").unwrap(), "123");
-        assert_eq!(run_cmds_trim_newline("echo 123").unwrap(), "123");
-        assert_eq!(
-            run_cmds_trim_newline("whoami").unwrap() + "\n",
-            run_cmds("whoami").unwrap()
-        );
-    }
 }
